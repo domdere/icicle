@@ -98,14 +98,7 @@ instance Arbitrary PM.Prim where
   = oneof
      [ PM.PrimArithUnary  <$> arbitrary <*> arbitrary
      , PM.PrimArithBinary <$> arbitrary <*> arbitrary
-
-     -- Relational operators *do* work on certain types, but for some types, such as complex Maps and Arrays,
-     -- it doesn't match the Data.Map and [] semantics.
-     -- We can cheat and only generate Ord functions on simpler types, while generating (==) and (/=) for anything.
-     , PM.PrimRelation    <$> arbitrary <*> genOrdValType
-     , PM.PrimRelation PM.PrimRelationEq <$> arbitrary
-     , PM.PrimRelation PM.PrimRelationNe <$> arbitrary
-
+     , PM.PrimRelation    <$> arbitrary <*> arbitrary
      , PM.PrimLogical     <$> arbitrary
      , PM.PrimTime        <$> arbitrary
 
@@ -121,6 +114,11 @@ instance Arbitrary PM.Prim where
 
      , PM.PrimBuiltinFun <$> arbitrary
      ]
+
+instance Arbitrary ArithType where
+ arbitrary = oneof
+   [ return ArithIntT
+   , return ArithDoubleT ]
 
 instance Arbitrary PM.PrimArithUnary where
  arbitrary = arbitraryBoundedEnum
@@ -181,11 +179,6 @@ instance Arbitrary PM.PrimBuiltinMath where
 
 --------------------------------------------------------------------------------
 
-instance Arbitrary ArithType where
- arbitrary = oneof
-   [ return ArithIntT
-   , return ArithDoubleT ]
-
 instance Arbitrary ValType where
   arbitrary =
    -- Need to be careful about making smaller things.
@@ -205,6 +198,7 @@ instance Arbitrary ValType where
          , StructT <$> arbitrary
          ]
 
+<<<<<<< HEAD
 -- Generate an "Ord-able" ValType.
 -- Some of the Ord instances for values are different to the flattened/melted instances:
 -- particularly arrays and maps of non-primitives.
@@ -252,13 +246,18 @@ genStructType genT
  where
    genField = (,) <$> arbitrary <*> genT
 
+=======
+>>>>>>> parent of db388a2... carefully get the tests to pass
 instance Arbitrary StructType where
   -- Structs have at most five fields, to prevent them from being too large.
   -- Field types are much more likely to be "primimtives", so that they are not too deep.
   arbitrary
-   = genStructType genFieldType
+   = StructType . Map.fromList . List.take 10 <$> listOf genField
    where
-    genFieldType = oneof_sized (fmap pure [IntT, UnitT, BoolT, TimeT, StringT]) [arbitrary]
+    genField
+      = (,) <$> arbitrary <*> genFieldType
+    genFieldType
+      = oneof_sized (fmap pure [IntT, UnitT, BoolT, TimeT, StringT]) [arbitrary]
 
 instance Arbitrary StructField where
   arbitrary =
