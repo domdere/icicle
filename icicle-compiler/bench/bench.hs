@@ -148,6 +148,7 @@ createBenchmark (name, path) = do
     (Just c)
     (ScopeSnapshot time)
     (1024*1024)
+
     Nothing
     I.FlagUseDropFile
     I.defaultZebraChunkFactCount
